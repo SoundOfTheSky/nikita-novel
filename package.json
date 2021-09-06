@@ -1,0 +1,26 @@
+{
+  "name": "nw",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "prettier": "latest",
+    "eslint": "latest",
+    "eslint-plugin-prettier": "latest",
+    "eslint-config-prettier": "latest",
+    "stylelint": "latest",
+    "stylelint-config-rational-order": "latest",
+    "stylelint-config-standard": "latest",
+    "stylelint-order": "latest",
+    "stylelint-prettier": "latest",
+    "stylelint-config-prettier": "latest",
+    "vite": "^2"
+  },
+  "scripts": {
+    "lint": "prettier -c \"**/*{.js,.json,.jsx}\" && eslint \"src/**/*{.js,.jsx}\" && stylelint \"src/**/*.css\"",
+    "lint:fix": "prettier -w \"**/*{.js,.json,.jsx}\" && eslint \"src/**/*{.js,.jsx}\" --fix && stylelint \"src/**/*.css\" --fix",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}

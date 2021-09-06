@@ -1,0 +1,159 @@
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  user-select: none;
+}
+body > * {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+}
+#disclaimer {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: #000;
+}
+#disclaimer .title {
+  color: red;
+  font-size: 48px;
+}
+#main-menu {
+  background: rgb(8, 0, 26);
+}
+#main-menu .background {
+  position: absolute;
+  width: 100vw;
+  opacity: 0;
+  transition: 10s;
+  pointer-events: none;
+}
+#main-menu .buttons {
+  z-index: 1;
+  margin-top: 5vw;
+  margin-left: 5vw;
+  color: #fff;
+  font-size: 3vw;
+}
+#main-menu .buttons > div {
+  margin-top: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.5s;
+}
+#main-menu .buttons > div:hover {
+  color: yellow;
+}
+#game .background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0;
+  transition: 0.5s;
+  pointer-events: none;
+}
+#dialog {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  z-index: 10;
+  width: 60vw;
+  height: 10vw;
+  color: #fff;
+  font-size: 1.5vw;
+  background: rgba(67, 0, 99, 0.8);
+  transform: translateX(-50%);
+}
+#dialog-name {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#dialog-text {
+  width: calc(100% - 4vw);
+  height: calc(100% - 4vw);
+  margin: 2vw;
+}
+#dialog-buttons {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: flex;
+  justify-content: space-around;
+  width: 60%;
+  transform: translateX(-50%);
+}
+#dialog-buttons > div {
+  cursor: pointer;
+  transition: 0.2s;
+}
+#dialog-buttons > div:hover {
+  color: rgb(148, 148, 148);
+}
+#choose {
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+}
+#choose div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30vw;
+  height: 5vh;
+  margin: 1vh 0;
+  color: #fff;
+  font-size: 3vh;
+  background: rgb(88, 0, 129);
+  border: 0.5vw solid rgb(68, 0, 99);
+  cursor: pointer;
+  transition: 0.2s;
+}
+#choose div:hover {
+  background: rgb(75, 0, 110);
+}
+#saves {
+  position: absolute;
+  top: 0;
+  right: -18vw;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 18vw;
+  height: 100vh;
+  color: #fff;
+  background: rgba(67, 0, 99, 0.8);
+  border-left: 0.5vw solid rgb(68, 0, 99);
+  transition: 1s;
+}
+#saves > div {
+  width: 14vw;
+  height: 14vh;
+  margin: 0.5vh 0;
+  cursor: pointer;
+  transition: 0.5s;
+}
+#saves > div:hover {
+  filter: brightness(0.9);
+}
+#saves .create-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2vh;
+  background: rgb(67, 0, 99);
+}
