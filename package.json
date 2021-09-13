@@ -4,16 +4,16 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "prettier": "latest",
     "eslint": "latest",
-    "eslint-plugin-prettier": "latest",
     "eslint-config-prettier": "latest",
+    "eslint-plugin-prettier": "latest",
+    "prettier": "^2.4.0",
     "stylelint": "latest",
+    "stylelint-config-prettier": "latest",
     "stylelint-config-rational-order": "latest",
     "stylelint-config-standard": "latest",
     "stylelint-order": "latest",
     "stylelint-prettier": "latest",
-    "stylelint-config-prettier": "latest",
     "vite": "^2"
   },
   "scripts": {

@@ -121,6 +121,9 @@ dialogSkip.addEventListener('click', e => {
     renderPanel();
   }
 });
+const actors = {};
+[...document.getElementsByClassName('actor')].forEach(a => (actors[a.className.slice(8)] = a));
+
 async function renderPanel() {
   const i = save.i;
   const panel = save.script[save.i];
@@ -147,6 +150,7 @@ async function renderPanel() {
     }
     if (panel.n !== undefined) dialogName.innerText = panel.n;
     if (panel.a) for (const a of panel.a) playAudio(...a);
+    if (panel.as) for (const a of panel.as) stopAudio(a);
     if (panel.c) {
       setAutoEnabled(false);
       for (let ci = 0; ci < panel.c.length; ci++) {
@@ -154,25 +158,43 @@ async function renderPanel() {
         btn.innerText = panel.c[ci];
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          startScript(scripts[panel.cc[ci]]);
+          startScript(typeof scripts[panel.cc[ci]] === 'function' ? scripts[panel.cc[ci]]() : scripts[panel.cc[ci]]);
           [...choose.children].forEach(child => child.remove());
           setAutoEnabled(true);
         });
         choose.appendChild(btn);
       }
     }
+    if (panel.p) {
+      panel.p.forEach(async actor => {
+        const img = actors[actor.n];
+        if (actor.h) img.style.height = actor.h + 'vh';
+        await nextTick();
+        if (actor.a && actor.a.length) {
+          for (let i = 0; i < actor.a.length; i++) {
+            img.style.transition = (actor.a[i][2] ?? 0) + 'ms';
+            img.style.left = actor.a[i][0] + 'vw';
+            img.style.bottom = actor.a[i][1] + 'vh';
+            await wait(actor.a[i][2] ?? 0);
+            img.style.transition = 'none';
+          }
+        }
+      });
+    }
   }
+
   dialogText.innerHTML = '';
   textAnimation = true;
   for (const char of isSimple ? panel : panel.q) {
-    await wait(dialogSkipEnabled ? 2 : 50);
+    await wait(dialogSkipEnabled ? 1 : 50);
     if (!textAnimation) break;
+    if (i !== save.i) return;
     if (char === '\n') dialogText.innerHTML += '<br/>';
     else dialogText.innerHTML += char;
   }
   textAnimation = false;
   if (dialogAutoEnabled || dialogSkipEnabled) {
-    await wait(dialogSkipEnabled ? 100 : 1500);
+    await wait(dialogSkipEnabled ? 20 : 1500);
     if (i !== save.i) return;
     nextPanel();
   }

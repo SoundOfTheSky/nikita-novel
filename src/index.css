@@ -157,3 +157,11 @@ body > * {
   font-size: 2vh;
   background: rgb(67, 0, 99);
 }
+.actor {
+  position: absolute;
+  bottom: -100vw;
+  left: 50vw;
+  z-index: 1;
+  height: 50vh;
+  transform: translateX(-50%);
+}
