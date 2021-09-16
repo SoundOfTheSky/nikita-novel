@@ -23,6 +23,7 @@ function setMenu(menu) {
 }
 function playAudio(name, loop) {
   const audio = new Audio('/audio/' + name);
+  audio.isLooped=loop;
   audio.play();
   if (game.audio[name]) stopAudio(name);
   game.audio[name] = audio;
@@ -158,9 +159,12 @@ async function renderPanel() {
         btn.innerText = panel.c[ci];
         btn.addEventListener('click', e => {
           e.stopPropagation();
-          startScript(typeof scripts[panel.cc[ci]] === 'function' ? scripts[panel.cc[ci]]() : scripts[panel.cc[ci]]);
+          startScript(
+            typeof scripts[panel.cc[ci]] === 'function' ? scripts[panel.cc[ci]](save) : scripts[panel.cc[ci]],
+          );
           [...choose.children].forEach(child => child.remove());
           setAutoEnabled(true);
+          save.choices.push(panel.c[ci]);
         });
         choose.appendChild(btn);
       }
@@ -181,6 +185,7 @@ async function renderPanel() {
         }
       });
     }
+    if (panel.s) return startScript(typeof scripts[panel.s] === 'function' ? scripts[panel.s](save) : scripts[panel.s]);
   }
 
   dialogText.innerHTML = '';
@@ -200,12 +205,8 @@ async function renderPanel() {
   }
 }
 function nextPanel() {
-  if (save.i === save.script.length - 1) {
-    if (save.s) startScript(save.s);
-  } else {
-    save.i++;
-    renderPanel();
-  }
+  save.i++;
+  renderPanel();
 }
 menus.game.addEventListener('click', () => {
   if (isSavesOpened) closeSaves();
@@ -219,6 +220,7 @@ function startScript(script) {
   save = {
     i: 0,
     script,
+    choices: [],
   };
   renderPanel();
 }
@@ -232,7 +234,7 @@ document.querySelector('#main-menu .buttons .exit').addEventListener('click', ()
 function closeSaves() {
   isSavesOpened = false;
   $saves.style.right = '-18vw';
-  [...dialogSave.children].forEach(c => c.remove());
+  [...$saves.children].forEach(c => c.remove());
 }
 function updateSaves() {
   localStorage.setItem('saves', JSON.stringify(saves));
@@ -241,12 +243,22 @@ dialogSave.addEventListener('click', e => {
   e.stopPropagation();
   isSavesOpened = true;
   $saves.style.right = '0';
+  saves.forEach(x => {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'save';
+    $saves.appendChild(addBtn);
+  });
   const addBtn = document.createElement('div');
-  (addBtn.innerText = 'Создать'), (addBtn.className = 'create-save');
+  addBtn.innerText = 'Создать';
+  addBtn.className = 'create-save';
   $saves.appendChild(addBtn);
   addBtn.addEventListener('click', () => {
+    save.bg = document.getElementsByClassName('background')[0].src;
+    save.name = dialogName.innerText;
+    save.audio = Object.fromEntries(Object.entries(game.audio).map(el=>[el[0],el[1].isLooped]))
     saves.push(save);
     updateSaves();
     closeSaves();
   });
+  
 });
