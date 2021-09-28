@@ -159,9 +159,9 @@ body > * {
 }
 .actor {
   position: absolute;
-  bottom: -100vw;
+  bottom: -500vw;
   left: 50vw;
   z-index: 1;
-  height: 50vh;
+  height: 150vh;
   transform: translateX(-50%);
 }

@@ -5,7 +5,7 @@ if (!s) {
   localStorage.setItem('saves', []);
   s = '[]';
 }
-const saves = JSON.parse(s);
+let saves = JSON.parse(s);
 const game = {
   menu: 'menu',
   audio: {},
@@ -23,7 +23,7 @@ function setMenu(menu) {
 }
 function playAudio(name, loop) {
   const audio = new Audio('/audio/' + name);
-  audio.isLooped=loop;
+  audio.isLooped = loop;
   audio.play();
   if (game.audio[name]) stopAudio(name);
   game.audio[name] = audio;
@@ -35,7 +35,7 @@ function playAudio(name, loop) {
 }
 function stopAudio(name) {
   game.audio[name]?.pause();
-  game.audio[name] = null;
+  delete game.audio[name];
 }
 setMenu('disclaimer');
 let mainMenuBackgroundInterval;
@@ -82,7 +82,7 @@ const nextTick = () => new Promise(r => requestAnimationFrame(r));
 const wait = t => new Promise(r => setTimeout(r, t));
 let gameBackground;
 let save;
-let textAnimation = false;
+let planeAnimation = false;
 let dialogAutoEnabled = false;
 let dialogSkipEnabled = false;
 let autoEnabled = true;
@@ -105,7 +105,7 @@ dialogAuto.addEventListener('click', e => {
   dialogSkip.style.textDecoration = null;
   dialogAutoEnabled = !dialogAutoEnabled;
   dialogAuto.style.textDecoration = dialogAutoEnabled ? 'underline' : null;
-  if (!textAnimation) {
+  if (!planeAnimation) {
     save.i++;
     renderPanel();
   }
@@ -117,7 +117,7 @@ dialogSkip.addEventListener('click', e => {
   dialogAuto.style.textDecoration = null;
   dialogSkipEnabled = !dialogSkipEnabled;
   dialogSkip.style.textDecoration = dialogSkipEnabled ? 'underline' : null;
-  if (!textAnimation) {
+  if (!planeAnimation) {
     save.i++;
     renderPanel();
   }
@@ -130,23 +130,21 @@ async function renderPanel() {
   const panel = save.script[save.i];
   console.log(panel);
   const isSimple = typeof panel === 'string';
+  planeAnimation = true;
   if (!isSimple) {
     if (panel.bg) {
       if (gameBackground) {
         const bg = gameBackground;
         setTimeout(() => bg.remove(), 500);
       }
-      const isColor = panel.bg.startsWith('#');
+      const isColor = panel.bg.startsWith('#') || panel.bg.startsWith('rgb');
       const bg = document.createElement(isColor ? 'div' : 'img');
       bg.className = 'background';
       if (isColor) bg.style.backgroundColor = panel.bg;
       else bg.src = '/backgrounds/' + panel.bg;
       menus.game.appendChild(bg);
-      if (!gameBackground) bg.style.opacity = 1;
-      else {
-        await nextTick();
-        bg.style.opacity = 1;
-      }
+      await nextTick();
+      bg.style.opacity = 1;
       gameBackground = bg;
     }
     if (panel.n !== undefined) dialogName.innerText = panel.n;
@@ -169,35 +167,39 @@ async function renderPanel() {
         choose.appendChild(btn);
       }
     }
-    if (panel.p) {
+    if (panel.p)
       panel.p.forEach(async actor => {
         const img = actors[actor.n];
         if (actor.h) img.style.height = actor.h + 'vh';
         await nextTick();
         if (actor.a && actor.a.length) {
           for (let i = 0; i < actor.a.length; i++) {
-            img.style.transition = (actor.a[i][2] ?? 0) + 'ms';
-            img.style.left = actor.a[i][0] + 'vw';
-            img.style.bottom = actor.a[i][1] + 'vh';
-            await wait(actor.a[i][2] ?? 0);
-            img.style.transition = 'none';
+            if (planeAnimation) {
+              img.style.transition = (actor.a[i][2] ?? 0) + 'ms';
+              img.style.left = actor.a[i][0] + 'vw';
+              img.style.bottom = actor.a[i][1] + 'vh';
+              await wait(actor.a[i][2] ?? 0);
+              img.style.transition = 'none';
+            } else {
+              img.style.transition = 'none';
+              img.style.left = actor.a[actor.a.length - 1][0] + 'vw';
+              img.style.bottom = actor.a[actor.a.length - 1][1] + 'vh';
+            }
           }
         }
       });
-    }
     if (panel.s) return startScript(typeof scripts[panel.s] === 'function' ? scripts[panel.s](save) : scripts[panel.s]);
   }
 
   dialogText.innerHTML = '';
-  textAnimation = true;
   for (const char of isSimple ? panel : panel.q) {
     await wait(dialogSkipEnabled ? 1 : 50);
-    if (!textAnimation) break;
+    if (!planeAnimation) break;
     if (i !== save.i) return;
     if (char === '\n') dialogText.innerHTML += '<br/>';
     else dialogText.innerHTML += char;
   }
-  textAnimation = false;
+  planeAnimation = false;
   if (dialogAutoEnabled || dialogSkipEnabled) {
     await wait(dialogSkipEnabled ? 20 : 1500);
     if (i !== save.i) return;
@@ -210,8 +212,8 @@ function nextPanel() {
 }
 menus.game.addEventListener('click', () => {
   if (isSavesOpened) closeSaves();
-  else if (textAnimation) {
-    textAnimation = false;
+  else if (planeAnimation) {
+    planeAnimation = false;
     const panel = save.script[save.i];
     dialogText.innerHTML = (typeof panel === 'string' ? panel : panel.q).replace(/\n/g, '<br/>');
   } else nextPanel();
@@ -239,26 +241,117 @@ function closeSaves() {
 function updateSaves() {
   localStorage.setItem('saves', JSON.stringify(saves));
 }
+function populateSave() {
+  save.bg = gameBackground?.src || gameBackground?.style.backgroundColor;
+  save.name = dialogName.innerText;
+  save.audio = Object.fromEntries(Object.entries(game.audio).map(el => [el[0], el[1].isLooped]));
+  save.p = Object.entries(actors).map(a => ({
+    n: a[0],
+    h: +a[1].style.height.replace('vw', ''),
+    a: [
+      [
+        a[1].style.left ? +a[1].style.left.replace('vw', '') : 50,
+        a[1].style.bottom ? +a[1].style.bottom.replace('vh', '') : -300,
+      ],
+    ],
+  }));
+}
 dialogSave.addEventListener('click', e => {
   e.stopPropagation();
+  if (isSavesOpened) return closeSaves();
   isSavesOpened = true;
   $saves.style.right = '0';
-  saves.forEach(x => {
+  for (let i = 0; i < saves.length; i++) {
     const addBtn = document.createElement('div');
     addBtn.className = 'save';
+    addBtn.style.background = `no-repeat 0 0/cover url(${saves[i].bg})`;
+    addBtn.addEventListener('click', () => {
+      populateSave();
+      saves[i] = save;
+      updateSaves();
+      closeSaves();
+    });
     $saves.appendChild(addBtn);
-  });
+  }
   const addBtn = document.createElement('div');
   addBtn.innerText = 'Создать';
   addBtn.className = 'create-save';
   $saves.appendChild(addBtn);
   addBtn.addEventListener('click', () => {
-    save.bg = document.getElementsByClassName('background')[0].src;
-    save.name = dialogName.innerText;
-    save.audio = Object.fromEntries(Object.entries(game.audio).map(el=>[el[0],el[1].isLooped]))
+    populateSave();
     saves.push(save);
     updateSaves();
     closeSaves();
   });
-  
 });
+dialogLoad.addEventListener('click', e => {
+  e.stopPropagation();
+  if (isSavesOpened) return closeSaves();
+  isSavesOpened = true;
+  saves = JSON.parse(localStorage.getItem('saves'));
+  $saves.style.right = '0';
+  for (let i = 0; i < saves.length; i++) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'save';
+    const isColor = saves[i].bg.startsWith('#') || saves[i].bg.startsWith('rgb');
+    if (isColor) addBtn.style.backgroundColor = saves[i].bg;
+    else addBtn.style.background = `no-repeat 0 0/cover url(${saves[i].bg})`;
+    addBtn.addEventListener('click', () => !planeAnimation && loadGame(saves[i]));
+    $saves.appendChild(addBtn);
+  }
+});
+document.querySelector('#main-menu .buttons .load').addEventListener('click', e => {
+  e.stopPropagation();
+  if (isSavesOpened) return closeSaves();
+  isSavesOpened = true;
+  saves = JSON.parse(localStorage.getItem('saves'));
+  $saves.style.right = '0';
+  for (let i = 0; i < saves.length; i++) {
+    const addBtn = document.createElement('div');
+    addBtn.className = 'save';
+    const isColor = saves[i].bg.startsWith('#') || saves[i].bg.startsWith('rgb');
+    if (isColor) addBtn.style.backgroundColor = saves[i].bg;
+    else addBtn.style.background = `no-repeat 0 0/cover url(${saves[i].bg})`;
+    addBtn.addEventListener('click', () => {
+      clearInterval(mainMenuBackgroundInterval);
+      stopAudio('airplanes.mp3');
+      setMenu('game');
+      loadGame(saves[i]);
+    });
+    $saves.appendChild(addBtn);
+  }
+});
+async function loadGame(s) {
+  save = s;
+  // Background
+  const isColor = s.bg.startsWith('#') || s.bg.startsWith('rgb');
+  const bg = document.createElement(isColor ? 'div' : 'img');
+  bg.className = 'background';
+  if (isColor) bg.style.backgroundColor = s.bg;
+  else bg.src = s.bg;
+  menus.game.appendChild(bg);
+  await nextTick();
+  bg.style.opacity = 1;
+  gameBackground = bg;
+  // Name
+  dialogName.innerText = s.name;
+  // Actors
+  s.p.forEach(async actor => {
+    const img = actors[actor.n];
+    if (actor.h) img.style.height = actor.h + 'vh';
+    await nextTick();
+    if (actor.a && actor.a.length) {
+      for (let i = 0; i < actor.a.length; i++) {
+        img.style.transition = (actor.a[i][2] ?? 0) + 'ms';
+        img.style.left = actor.a[i][0] + 'vw';
+        img.style.bottom = actor.a[i][1] + 'vh';
+        await wait(actor.a[i][2] ?? 0);
+        img.style.transition = 'none';
+      }
+    }
+  });
+  // Audio
+  Object.keys(game.audio).forEach(stopAudio);
+  Object.entries(s.audio).forEach(a => playAudio(...a));
+  renderPanel();
+}
