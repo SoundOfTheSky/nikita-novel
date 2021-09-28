@@ -165,3 +165,56 @@ body > * {
   height: 150vh;
   transform: translateX(-50%);
 }
+#fnf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+#fnf img {
+  position: absolute;
+}
+#fnf_background {
+  width: 100vw;
+  height: 100vh;
+}
+#fnf_mordecai {
+  top: 50vh;
+  left: 20vw;
+  transform: translate(-50%, -50%);
+}
+#fnf_twilight {
+  top: 50vh;
+  left: 20vw;
+  transform: translate(-50%, -50%);
+}
+.fnf-arrow {
+  top: 1vh;
+  width: 5vw;
+}
+#e_fnf_left {
+  left: 5vw;
+}
+#e_fnf_top {
+  left: 10vw;
+}
+#e_fnf_bottom {
+  left: 15vw;
+}
+#e_fnf_right {
+  left: 20vw;
+}
+
+#fnf_left {
+  left: 75vw;
+}
+#fnf_top {
+  left: 80vw;
+}
+#fnf_bottom {
+  left: 85vw;
+}
+#fnf_right {
+  left: 90vw;
+}

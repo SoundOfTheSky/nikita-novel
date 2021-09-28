@@ -1,5 +1,6 @@
 import '@/index.css';
 import scripts from '@/script';
+import chart from '@/chart';
 let s = localStorage.getItem('saves');
 if (!s) {
   localStorage.setItem('saves', []);
@@ -23,15 +24,10 @@ function setMenu(menu) {
 }
 function playAudio(name, loop) {
   const audio = new Audio('/audio/' + name);
-  audio.isLooped = loop;
+  audio.loop = loop;
   audio.play();
   if (game.audio[name]) stopAudio(name);
   game.audio[name] = audio;
-  if (loop)
-    audio.addEventListener('ended', () => {
-      console.log('ended');
-      playAudio(name);
-    });
 }
 function stopAudio(name) {
   game.audio[name]?.pause();
@@ -75,7 +71,6 @@ const dialogName = document.getElementById('dialog-name');
 const dialogAuto = document.getElementById('dialog-auto');
 const dialogSkip = document.getElementById('dialog-skip');
 const dialogSave = document.getElementById('dialog-save');
-const dialogLoad = document.getElementById('dialog-load');
 const $saves = document.getElementById('saves');
 const choose = document.getElementById('choose');
 const nextTick = () => new Promise(r => requestAnimationFrame(r));
@@ -189,6 +184,7 @@ async function renderPanel() {
         }
       });
     if (panel.s) return startScript(typeof scripts[panel.s] === 'function' ? scripts[panel.s](save) : scripts[panel.s]);
+    if (panel.playFinal) return playFinal();
   }
 
   dialogText.innerHTML = '';
@@ -354,4 +350,67 @@ async function loadGame(s) {
   Object.keys(game.audio).forEach(stopAudio);
   Object.entries(s.audio).forEach(a => playAudio(...a));
   renderPanel();
+function playFinal() {
+  closeSaves();
+  const keys = [false, false, false, false];
+  const keyDict = {
+    ArrowLeft: 0,
+    ArrowUp: 1,
+    ArrowDown: 2,
+    ArrowRight: 3,
+  };
+  document.addEventListener('keydown', e => {
+    const i = keyDict[e.key];
+    if (i === undefined) return;
+    keys[i] = true;
+    checkKeys();
+  });
+  document.addEventListener('keyup', e => {
+    const i = keyDict[e.key];
+    if (i === undefined) return;
+    keys[i] = false;
+    checkKeys();
+  });
+  const timeLine = [];
+  for(const c of chart) {
+    if(c[1][0]==='1') timeLine.push([c[0], 1]);
+    if(c[1][1]==='1') timeLine.push([c[0], 2]);
+    if(c[1][2]==='1') timeLine.push([c[0], 3]);
+    if(c[1][3]==='1') timeLine.push([c[0], 4]);
+    if(c[1][0]==='2') timeLine.push([c[0], 5]);
+    if(c[1][1]==='2') timeLine.push([c[0], 6]);
+    if(c[1][2]==='2') timeLine.push([c[0], 7]);
+    if(c[1][3]==='2') timeLine.push([c[0], 8]);
+  }
+  playAudio('airplanes.mp3');
+  const startTime = Date.now();
+  let timeout;
+  let misses=0;
+  function missDetection() {
+    timeout = setTimeout(()=>{}, Date.now()-chart[0][0]);
+  }
+  function checkKeys() {
+    const songTime = Date.now();
+    const ableToPress = [];
+    for(const t of timeLine) {
+      if(songTime+250<t[0]) break;
+      ableToPress.push(t);
+    }
+    if(keys[0]) press(1);
+    if(keys[1]) press(2);
+    if(keys[2]) press(3);
+    if(keys[3]) press(4);
+    
+    for(let i=0;i<ableToPress.length;i++) {
+      
+    }
+    function press(n) {
+      const i = ableToPress.indexOf(n);
+      if(i!==-1) ableToPress.splice(i,1);
+      else {
+        const i = ableToPress.indexOf(n+4);
+        if(i!==-1) ableToPress.splice(i,1);
+      }
+    }
+  }
 }
