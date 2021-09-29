@@ -16,6 +16,7 @@ const menus = {
   'main-menu': document.getElementById('main-menu'),
   'save-menu': document.getElementById('save-menu'),
   disclaimer: document.getElementById('disclaimer'),
+  fnf: document.getElementById('fnf'),
 };
 function setMenu(menu) {
   game.menu = menu;
@@ -350,6 +351,7 @@ async function loadGame(s) {
   Object.keys(game.audio).forEach(stopAudio);
   Object.entries(s.audio).forEach(a => playAudio(...a));
   renderPanel();
+}
 function playFinal() {
   closeSaves();
   const keys = [false, false, false, false];
@@ -359,57 +361,114 @@ function playFinal() {
     ArrowDown: 2,
     ArrowRight: 3,
   };
+  const timeLine = [];
+  let timeout;
+  let chartI = 0;
+  const misses = 0;
+  const holdNotes = [false, false, false, false];
+  const audio = new Audio('/audio/airplanes.mp3');
   document.addEventListener('keydown', e => {
     const i = keyDict[e.key];
     if (i === undefined) return;
     keys[i] = true;
-    checkKeys();
+    keyDown();
   });
   document.addEventListener('keyup', e => {
     const i = keyDict[e.key];
     if (i === undefined) return;
     keys[i] = false;
-    checkKeys();
+    if (holdNotes[i]) {
+      misses++;
+    }
   });
-  const timeLine = [];
-  for(const c of chart) {
-    if(c[1][0]==='1') timeLine.push([c[0], 1]);
-    if(c[1][1]==='1') timeLine.push([c[0], 2]);
-    if(c[1][2]==='1') timeLine.push([c[0], 3]);
-    if(c[1][3]==='1') timeLine.push([c[0], 4]);
-    if(c[1][0]==='2') timeLine.push([c[0], 5]);
-    if(c[1][1]==='2') timeLine.push([c[0], 6]);
-    if(c[1][2]==='2') timeLine.push([c[0], 7]);
-    if(c[1][3]==='2') timeLine.push([c[0], 8]);
-  }
-  playAudio('airplanes.mp3');
+
   const startTime = Date.now();
-  let timeout;
-  let misses=0;
-  function missDetection() {
-    timeout = setTimeout(()=>{}, Date.now()-chart[0][0]);
+  audio.play();
+  function calcLengthOfHoldNote(i, note) {
+    let time = 0;
+    for (let i2 = i; i2 < chart.length; i2++) {
+      const c2 = chart[i2];
+      time += c2[0];
+      if (c2[1][note] !== '2') return time;
+    }
   }
-  function checkKeys() {
+  for (let i = 0; i < chart.length; i++) {
+    const c = chart[i];
+    if (c[2][0] === '1') timeLine.push([c[1] + startTime, 1]);
+    if (c[2][1] === '1') timeLine.push([c[1] + startTime, 2]);
+    if (c[2][2] === '1') timeLine.push([c[1] + startTime, 3]);
+    if (c[2][3] === '1') timeLine.push([c[1] + startTime, 4]);
+    if (c[2][0] === '2') timeLine.push([c[1] + startTime, 5, calcLengthOfHoldNote(i, 0)]);
+    if (c[2][1] === '2') timeLine.push([c[1] + startTime, 6, calcLengthOfHoldNote(i, 1)]);
+    if (c[2][2] === '2') timeLine.push([c[1] + startTime, 7, calcLengthOfHoldNote(i, 2)]);
+    if (c[2][3] === '2') timeLine.push([c[1] + startTime, 8, calcLengthOfHoldNote(i, 3)]);
+  }
+  function loop() {
+    const now = Date.now();
+    const itemI = chartI++;
+    const item = chart[itemI];
+    async function drawArrow(n, length) {
+      const img = document.createElement('img');
+      img.src = `fnf_${['left', 'top', 'bottom', 'right'][n]}.png`;
+      img.className = 'fnf_arrow fnf-arrow-left';
+      img.style.transition = (item[3] ?? 2000) * 2 + 'ms';
+      img.style.left = item[0] ? (4 - n) * 10 + 'vw' : 100 - (4 - 0) * 10 + 'vw';
+      img.style.top = '150vh';
+      menus.fnf.appendChild(img);
+      let line;
+      if (length !== undefined) {
+        line = document.createElement('div');
+        line.className = 'fnf_line';
+        line.style.transition = (item[3] ?? 2000) * 2 + length + 'ms';
+        line.style.height = (length / (item[3] ?? 2000)) * 100 + 'vh';
+        line.style.left = img.style.left;
+        line.style.top = '150vh';
+      }
+      await nextTick();
+      img.style.top = '-150vh';
+      if (length !== undefined) line.style.top = -line.style.height - 50 + 'vh';
+      setTimeout(() => {
+        img.remove();
+        if (length !== undefined) line.remove();
+      }, (item[3] ?? 2000) * 2 + (length ?? 0));
+    }
+    setTimeout(async () => {
+      if (item[2][0] === '1') drawArrow(0);
+      if (item[2][1] === '1') drawArrow(1);
+      if (item[2][2] === '1') drawArrow(2);
+      if (item[2][3] === '1') drawArrow(3);
+      if (item[2][0] === '2') drawArrow(0, calcLengthOfHoldNote(itemI, 0));
+      if (item[2][1] === '2') drawArrow(0, calcLengthOfHoldNote(itemI, 1));
+      if (item[2][2] === '2') drawArrow(0, calcLengthOfHoldNote(itemI, 2));
+      if (item[2][3] === '2') drawArrow(0, calcLengthOfHoldNote(itemI, 3));
+    }, item[1] - now + startTime - (item[2] ?? 2000));
+  }
+  loop();
+  function keyDown() {
     const songTime = Date.now();
     const ableToPress = [];
-    for(const t of timeLine) {
-      if(songTime+250<t[0]) break;
-      ableToPress.push(t);
+    for (let i = 0; i < timeLine.length; i++) {
+      if (songTime + 200 < timeLine[i][0]) break;
+      ableToPress.push(timeLine[i]);
     }
-    if(keys[0]) press(1);
-    if(keys[1]) press(2);
-    if(keys[2]) press(3);
-    if(keys[3]) press(4);
-    
-    for(let i=0;i<ableToPress.length;i++) {
-      
-    }
+    if (keys[0]) press(1);
+    if (keys[1]) press(2);
+    if (keys[2]) press(3);
+    if (keys[3]) press(4);
     function press(n) {
-      const i = ableToPress.indexOf(n);
-      if(i!==-1) ableToPress.splice(i,1);
-      else {
-        const i = ableToPress.indexOf(n+4);
-        if(i!==-1) ableToPress.splice(i,1);
+      const i = ableToPress.findIndex(x => x[0] === n);
+      if (i !== -1) {
+        keys[n - 1] = false;
+        ableToPress.splice(i, 1);
+      } else {
+        const i = ableToPress.findIndex(x => x[0] === n + 4);
+        if (i !== -1) {
+          holdNotes[n - 1] = true;
+          setTimeout(() => {
+            holdNotes[n - 1] = false;
+          }, Math.max(50, ableToPress[i][2] - 200));
+          ableToPress.splice(i, 1);
+        }
       }
     }
   }
