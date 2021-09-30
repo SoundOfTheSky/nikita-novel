@@ -272,4 +272,7 @@ export default [
     q: 'Ну что же...',
   },
   'I gently open the door...',
+  {
+    s: 'b_home',
+  },
 ];

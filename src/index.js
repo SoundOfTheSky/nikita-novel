@@ -72,6 +72,7 @@ const dialogName = document.getElementById('dialog-name');
 const dialogAuto = document.getElementById('dialog-auto');
 const dialogSkip = document.getElementById('dialog-skip');
 const dialogSave = document.getElementById('dialog-save');
+const dialogLoad = document.getElementById('dialog-load');
 const $saves = document.getElementById('saves');
 const choose = document.getElementById('choose');
 const nextTick = () => new Promise(r => requestAnimationFrame(r));
@@ -124,9 +125,12 @@ const actors = {};
 async function renderPanel() {
   const i = save.i;
   const panel = save.script[save.i];
+  let animSync = 0;
   console.log(panel);
   const isSimple = typeof panel === 'string';
+  while (planeAnimation) await wait(10);
   planeAnimation = true;
+  if (isSimple || !panel.p) animSync++;
   if (!isSimple) {
     if (panel.bg) {
       if (gameBackground) {
@@ -153,6 +157,7 @@ async function renderPanel() {
         btn.innerText = panel.c[ci];
         btn.addEventListener('click', e => {
           e.stopPropagation();
+          planeAnimation = false;
           startScript(
             typeof scripts[panel.cc[ci]] === 'function' ? scripts[panel.cc[ci]](save) : scripts[panel.cc[ci]],
           );
@@ -164,27 +169,36 @@ async function renderPanel() {
       }
     }
     if (panel.p)
-      panel.p.forEach(async actor => {
-        const img = actors[actor.n];
-        if (actor.h) img.style.height = actor.h + 'vh';
-        await nextTick();
-        if (actor.a && actor.a.length) {
-          for (let i = 0; i < actor.a.length; i++) {
-            if (planeAnimation) {
-              img.style.transition = (actor.a[i][2] ?? 0) + 'ms';
-              img.style.left = actor.a[i][0] + 'vw';
-              img.style.bottom = actor.a[i][1] + 'vh';
-              await wait(actor.a[i][2] ?? 0);
-              img.style.transition = 'none';
-            } else {
-              img.style.transition = 'none';
-              img.style.left = actor.a[actor.a.length - 1][0] + 'vw';
-              img.style.bottom = actor.a[actor.a.length - 1][1] + 'vh';
+      Promise.all(
+        panel.p.map(async actor => {
+          const img = actors[actor.n];
+          if (actor.h) img.style.height = actor.h + 'vh';
+          await nextTick();
+          if (actor.a && actor.a.length) {
+            for (let i = 0; i < actor.a.length; i++) {
+              if (planeAnimation) {
+                img.style.transition = (actor.a[i][2] ?? 0) + 'ms';
+                img.style.left = actor.a[i][0] + 'vw';
+                img.style.bottom = actor.a[i][1] + 'vh';
+                await wait(actor.a[i][2] ?? 0);
+                img.style.transition = 'none';
+              } else {
+                img.style.transition = 'none';
+                img.style.left = actor.a[actor.a.length - 1][0] + 'vw';
+                img.style.bottom = actor.a[actor.a.length - 1][1] + 'vh';
+                break;
+              }
             }
           }
-        }
+        }),
+      ).then(() => {
+        animSync++;
+        if (animSync === 2) planeAnimation = false;
       });
-    if (panel.s) return startScript(typeof scripts[panel.s] === 'function' ? scripts[panel.s](save) : scripts[panel.s]);
+    if (panel.s) {
+      planeAnimation = false;
+      return startScript(typeof scripts[panel.s] === 'function' ? scripts[panel.s](save) : scripts[panel.s]);
+    }
     if (panel.playFinal) return playFinal();
   }
 
@@ -196,7 +210,8 @@ async function renderPanel() {
     if (char === '\n') dialogText.innerHTML += '<br/>';
     else dialogText.innerHTML += char;
   }
-  planeAnimation = false;
+  animSync++;
+  if (animSync === 2) planeAnimation = false;
   if (dialogAutoEnabled || dialogSkipEnabled) {
     await wait(dialogSkipEnabled ? 20 : 1500);
     if (i !== save.i) return;
@@ -364,7 +379,7 @@ function playFinal() {
   const timeLine = [];
   let timeout;
   let chartI = 0;
-  const misses = 0;
+  let misses = 0;
   const holdNotes = [false, false, false, false];
   const audio = new Audio('/audio/airplanes.mp3');
   document.addEventListener('keydown', e => {

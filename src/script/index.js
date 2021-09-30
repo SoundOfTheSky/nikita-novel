@@ -2,9 +2,6 @@ import newGame from './newGame';
 import a_sleep from './a_sleep';
 import a_tiktok from './a_tiktok';
 import b_wakeUp from './b_wakeUp';
-<<<<<<< HEAD
-import b_town from './b_town';
-=======
 import b_findBar from './b_findBar';
 import b_home from './b_home';
 import b_town from './b_town';
@@ -18,15 +15,11 @@ import d_getFood from './d_getFood';
 import e_date from './e_date';
 import gameOver from './gameOver';
 import gameOverEndless from './gameOverEndless';
->>>>>>> 8611be406855607e0afcf95c0abfdf578e6e1eec
 export default {
   newGame,
   a_sleep,
   a_tiktok,
   b_wakeUp,
-<<<<<<< HEAD
-  b_town,
-=======
   b_findBar,
   b_home,
   b_town,
@@ -40,5 +33,4 @@ export default {
   e_date,
   gameOver,
   gameOverEndless,
->>>>>>> 8611be406855607e0afcf95c0abfdf578e6e1eec
 };

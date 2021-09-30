@@ -14,6 +14,6 @@ module.exports = {
         severity: 'warning',
       },
     ],
-    "no-descending-specificity": null,
+    'no-descending-specificity': null,
   },
 };
