@@ -158,12 +158,14 @@ async function renderPanel() {
         btn.addEventListener('click', e => {
           e.stopPropagation();
           planeAnimation = false;
+          console.log('aaaaaaa', save.choices);
+          save.choices.push(panel.c[ci]);
+          console.log('bbbbbbbbbbb', save.choices);
+          [...choose.children].forEach(child => child.remove());
+          setAutoEnabled(true);
           startScript(
             typeof scripts[panel.cc[ci]] === 'function' ? scripts[panel.cc[ci]](save) : scripts[panel.cc[ci]],
           );
-          [...choose.children].forEach(child => child.remove());
-          setAutoEnabled(true);
-          save.choices.push(panel.c[ci]);
         });
         choose.appendChild(btn);
       }
@@ -181,7 +183,7 @@ async function renderPanel() {
                 img.style.left = actor.a[i][0] + 'vw';
                 img.style.bottom = actor.a[i][1] + 'vh';
                 await wait(actor.a[i][2] ?? 0);
-                img.style.transition = 'none';
+                //img.style.transition = 'none';
               } else {
                 img.style.transition = 'none';
                 img.style.left = actor.a[actor.a.length - 1][0] + 'vw';
@@ -203,6 +205,7 @@ async function renderPanel() {
   }
 
   dialogText.innerHTML = '';
+  if (!isSimple && panel.qs && !dialogSkipEnabled) playAudio(panel.qs, true);
   for (const char of isSimple ? panel : panel.q) {
     await wait(dialogSkipEnabled ? 1 : 50);
     if (!planeAnimation) break;
@@ -210,6 +213,7 @@ async function renderPanel() {
     if (char === '\n') dialogText.innerHTML += '<br/>';
     else dialogText.innerHTML += char;
   }
+  if (!isSimple && panel.qs && !dialogSkipEnabled) stopAudio(panel.qs);
   animSync++;
   if (animSync === 2) planeAnimation = false;
   if (dialogAutoEnabled || dialogSkipEnabled) {
@@ -231,11 +235,9 @@ menus.game.addEventListener('click', () => {
   } else nextPanel();
 });
 function startScript(script) {
-  save = {
-    i: 0,
-    script,
-    choices: [],
-  };
+  if (!save) save = { choices: [] };
+  save.i = 0;
+  save.script = script;
   renderPanel();
 }
 document.querySelector('#main-menu .buttons .new-game').addEventListener('click', () => {
@@ -256,17 +258,20 @@ function updateSaves() {
 function populateSave() {
   save.bg = gameBackground?.src || gameBackground?.style.backgroundColor;
   save.name = dialogName.innerText;
-  save.audio = Object.fromEntries(Object.entries(game.audio).map(el => [el[0], el[1].isLooped]));
-  save.p = Object.entries(actors).map(a => ({
-    n: a[0],
-    h: +a[1].style.height.replace('vw', ''),
-    a: [
-      [
-        a[1].style.left ? +a[1].style.left.replace('vw', '') : 50,
-        a[1].style.bottom ? +a[1].style.bottom.replace('vh', '') : -300,
-      ],
-    ],
-  }));
+  save.audio = Object.fromEntries(Object.entries(game.audio).map(el => [el[0], el[1].loop]));
+  save.p = Object.entries(actors).map(
+    a =>
+      console.log(a[0], a[1].style.height) || {
+        n: a[0],
+        h: +a[1].style.height.replace('vh', ''),
+        a: [
+          [
+            a[1].style.left ? +a[1].style.left.replace('vw', '') : 50,
+            a[1].style.bottom ? +a[1].style.bottom.replace('vh', '') : -300,
+          ],
+        ],
+      },
+  );
 }
 dialogSave.addEventListener('click', e => {
   e.stopPropagation();

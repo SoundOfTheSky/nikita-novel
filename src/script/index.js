@@ -2,6 +2,7 @@ import newGame from './newGame';
 import a_sleep from './a_sleep';
 import a_tiktok from './a_tiktok';
 import b_wakeUp from './b_wakeUp';
+import b_sleep from './b_sleep';
 import b_findBar from './b_findBar';
 import b_home from './b_home';
 import b_town from './b_town';
@@ -13,6 +14,7 @@ import d_checkDiner from './d_checkDiner';
 import d_checkHouses from './d_checkHouses';
 import d_getFood from './d_getFood';
 import e_date from './e_date';
+import d2_kaworu from './d2_kaworu';
 import gameOver from './gameOver';
 import gameOverEndless from './gameOverEndless';
 export default {
@@ -21,6 +23,7 @@ export default {
   a_tiktok,
   b_wakeUp,
   b_findBar,
+  b_sleep,
   b_home,
   b_town,
   c_doYouRemember,
@@ -33,4 +36,5 @@ export default {
   e_date,
   gameOver,
   gameOverEndless,
+  d2_kaworu,
 };
